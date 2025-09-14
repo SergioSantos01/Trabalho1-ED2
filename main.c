@@ -3,10 +3,12 @@
 #include <string.h>
 #include <ctype.h>
 
+// Tamanhos da tabela hash, da descrição da peça e do código da peça
 #define TAMANHO_INICIAL 101
 #define MAX_DESCRICAO 60
 #define MAX_CODIGO 20
 
+// Estruura para definir uma peça
 typedef struct No {
     char codigo[MAX_CODIGO];
     char descricao[MAX_DESCRICAO];
@@ -15,6 +17,7 @@ typedef struct No {
     struct No* prox;
 } No;
 
+// Estrutura para definir uma tabela hash
 typedef struct {
     No** tabela;
     int tamanho;
@@ -35,7 +38,7 @@ long long converter_para_decimal(char* codigo) {
 // Função hash usando método da divisão
 int hash_divisao(char* codigo, int tamanho_tabela) {
     long long decimal = converter_para_decimal(codigo);
-    return (int)(decimal % tamanho_tabela);
+    return (int)(decimal % tamanho_tabela); // Cálculo da divisão
 }
 
 // Método da Multiplicação
@@ -65,10 +68,10 @@ int hash_dobras(char* codigo, int tamanho_tabela) {
 
 // Inicializar a tabela hash
 void inicializar_tabela(TabelaHash* th, int tamanho, int (*funcao_hash)(char*, int)) {
-    th->tabela = (No**)malloc(tamanho * sizeof(No*));
+    th->tabela = (No**)malloc(tamanho * sizeof(No*)); // Aloca espaço na memória para a tabela
     th->tamanho = tamanho;
     th->num_elementos = 0;
-    th->funcao_hash = funcao_hash;
+    th->funcao_hash = funcao_hash; // Define a função hash que será utilizada
     int i;
     
     for (i = 0; i < tamanho; i++) {
@@ -86,16 +89,19 @@ void buscar_peca(TabelaHash* th) {
     printf("\n [2] Buscar Peca por Codigo\n");
     printf("codigo: ");
     
+    // Captura erros de entrada
     if (fgets(codigo, MAX_CODIGO, stdin) == NULL) {
         printf("Erro na leitura do codigo.\n");
         return;
     }
     codigo[strcspn(codigo, "\n")] = '\0'; // Remover quebra de linha
     
+    // Encontra um bucket para a peça adicionada
     int indice = th->funcao_hash(codigo, th->tamanho);
     No* atual = th->tabela[indice];
     int encontrada = 0;
     
+    // Imprime os dados da peça que foi buscada
     while (atual != NULL) {
         if (strcmp(atual->codigo, codigo) == 0) {
             printf("\nPeca encontrada:\n");
@@ -114,7 +120,7 @@ void buscar_peca(TabelaHash* th) {
     }
 }
 
-// Função auxiliar para buscar um nó pelo código 
+// Função auxiliar para buscar um nó pelo código, é utilizada na inserção de novas peças
 No* buscar_no_por_codigo(TabelaHash* th, char* codigo) {
     int indice = th->funcao_hash(codigo, th->tamanho);
     No* atual = th->tabela[indice];
@@ -129,6 +135,7 @@ No* buscar_no_por_codigo(TabelaHash* th, char* codigo) {
     return NULL;
 }
 
+// Verificação de números primos
 int eh_primo(int n) {
     int i;
     if (n <= 1) return 0;
@@ -141,14 +148,16 @@ int eh_primo(int n) {
     return 1;
 }
 
+// Encontra o número primo mais próximo
 int proximo_primo(int n) {
     while (!eh_primo(n)) n++;
     return n;
 }
 
+// Função que realiza rehash
 void fazer_rehash(TabelaHash* th, int novoTamanho) {
     // 1. Criar nova tabela temporária
-    No** novaTabela = (No**)malloc(novoTamanho * sizeof(No*));
+    No** novaTabela = (No**)malloc(novoTamanho * sizeof(No*)); // Aloca mais espaço na memória para o tamanho novo
     int i;
     for (i = 0; i < novoTamanho; i++) {
         novaTabela[i] = NULL;
@@ -183,6 +192,7 @@ void fazer_rehash(TabelaHash* th, int novoTamanho) {
     printf("Rehash realizado: %d elementos, novo tamanho: %d\n", elementos_reinseridos, novoTamanho);
 }
 
+// Função que realiza o rehash automático caso o fator de carga ultrapasse 0.75
 void verificar_rehash(TabelaHash* th) {
     float fator_carga = (float)th->num_elementos / th->tamanho;
     
@@ -208,7 +218,7 @@ void inserir_peca(TabelaHash* th) {
     
     // Capturar código
     printf("codigo: ");
-    if (fgets(codigo, MAX_CODIGO, stdin) == NULL) {
+    if (fgets(codigo, MAX_CODIGO, stdin) == NULL) { // Captura erros de entrada
         printf("Erro na leitura do codigo.\n");
         return;
     }
@@ -222,7 +232,7 @@ void inserir_peca(TabelaHash* th) {
     
     // Capturar descrição
     printf("descricao: ");
-    if (fgets(descricao, MAX_DESCRICAO, stdin) == NULL) {
+    if (fgets(descricao, MAX_DESCRICAO, stdin) == NULL) { // Captura erros de entrada
         printf("Erro na leitura da descricao.\n");
         return;
     }
@@ -230,7 +240,7 @@ void inserir_peca(TabelaHash* th) {
     
     // Capturar quantidade
     printf("qtde: ");
-    if (scanf("%d", &quantidade) != 1 || quantidade < 0) {
+    if (scanf("%d", &quantidade) != 1 || quantidade < 0) { // Captura erros de entrada
         printf("Quantidade invalida.\n");
         while (getchar() != '\n'); // Limpar buffer
         return;
@@ -238,7 +248,7 @@ void inserir_peca(TabelaHash* th) {
     
     // Capturar preço
     printf("preco: ");
-    if (scanf("%f", &preco) != 1 || preco <= 0) {
+    if (scanf("%f", &preco) != 1 || preco <= 0) { // Captura erros de entrada
         printf("Preco invalido.\n");
         while (getchar() != '\n'); // Limpar buffer
         return;
@@ -264,9 +274,11 @@ void inserir_peca(TabelaHash* th) {
     
     printf("Peca %s inserida com sucesso.\n\n", codigo);
 
+    // Realiza a vericação para verificar a necessidade de rehash após a inserção da peça nova
     verificar_rehash(th);
 }
 
+// Função para remover uma peça
 void remover_peca(TabelaHash* th) {
     char codigo[MAX_CODIGO];
     
@@ -276,17 +288,19 @@ void remover_peca(TabelaHash* th) {
     printf("\n[3] Remover Peca do Estoque\n");
     printf("codigo: ");
     
-    if (fgets(codigo, MAX_CODIGO, stdin) == NULL) {
+    if (fgets(codigo, MAX_CODIGO, stdin) == NULL) { // Captura erros de entrada
         printf("Erro na leitura do codigo.\n");
         return;
     }
     codigo[strcspn(codigo, "\n")] = '\0'; // Remover quebra de linha
     
+    // Itens para encontrar a peça na tabela
     int indice = th->funcao_hash(codigo, th->tamanho);
     No* atual = th->tabela[indice];
     No* anterior = NULL;
     int encontrada = 0;
     
+    // Loop que percorre a tabela para encontrar a peça correspondente para removê-la
     while (atual != NULL) {
         if (strcmp(atual->codigo, codigo) == 0) {
             if (anterior == NULL) {
@@ -362,6 +376,7 @@ void exibir_estatisticas(TabelaHash* th) {
 
 }
 
+// Função que carrega um arquivo .csv da pasta entrada_csv para a tabela hash
 void carregar_csv(TabelaHash* th) {
     char nome_arquivo[100];
     char caminho_completo[256];
@@ -374,13 +389,13 @@ void carregar_csv(TabelaHash* th) {
     printf("\n[5] Carregar Pecas de um Arquivo CSV\n");
     printf("nome do arquivo: ");
     
-    if (fgets(nome_arquivo, sizeof(nome_arquivo), stdin) == NULL) {
+    if (fgets(nome_arquivo, sizeof(nome_arquivo), stdin) == NULL) { // Captura erros de entrada
         printf("Erro na leitura do nome do arquivo.\n");
         return;
     }
     nome_arquivo[strcspn(nome_arquivo, "\n")] = '\0';
     
-    // Construir caminho completo
+    // Construir caminho completo; como o .exe do código está em output, é necessário o caminho abaixo para acessar o .csv de entrada
     snprintf(caminho_completo, sizeof(caminho_completo), "../entrada_csv/%s", nome_arquivo);
     
     FILE* arquivo = fopen(caminho_completo, "r");
@@ -446,6 +461,7 @@ void carregar_csv(TabelaHash* th) {
     verificar_rehash(th);
 }
 
+// Função que salva a tabela em um arquivo .csv na pasta saida_csv
 void salvar_csv(TabelaHash* th) {
     char nome_arquivo[100];
     char caminho_completo[256];
@@ -457,7 +473,7 @@ void salvar_csv(TabelaHash* th) {
     printf("\n[6] Salvar Tabela em Arquivo CSV\n");
     printf("arquivo: ");
     
-    if (fgets(nome_arquivo, sizeof(nome_arquivo), stdin) == NULL) {
+    if (fgets(nome_arquivo, sizeof(nome_arquivo), stdin) == NULL) { // Captura erros de entrada
         printf("Erro na leitura do nome do arquivo.\n");
         return;
     }
@@ -494,11 +510,13 @@ void salvar_csv(TabelaHash* th) {
     printf("Tabela salva em %s (%d itens).\n\n", caminho_completo, itens_salvos);
 }
 
+// Função para trocar a função de hash
 void trocar_funcao_hash(TabelaHash* th) {
     int opcao;
     int (*nova_funcao)(char*, int) = NULL;
     char* nome_funcao = "";
     
+    // Menu de escolha
     printf("\n[7] Trocar Funcao de Hash\n");
     printf("Selecione o metodo:\n");
     printf("[1] Divisao (Padrao)\n");
@@ -506,13 +524,14 @@ void trocar_funcao_hash(TabelaHash* th) {
     printf("[3] Dobras\n");
     printf("Opcao: ");
     
-    if (scanf("%d", &opcao) != 1) {
+    if (scanf("%d", &opcao) != 1) { // Captura erros de entrada
         printf("Opcao invalida.\n");
         while (getchar() != '\n');
         return;
     }
     while (getchar() != '\n'); // Limpar buffer
     
+    // Seleção de opções
     switch (opcao) {
         case 1:
             nova_funcao = hash_divisao;
@@ -563,6 +582,7 @@ int main(void) {
     // Inicializar tabela hash com método da divisão
     inicializar_tabela(&th, TAMANHO_INICIAL, hash_divisao);
 
+    // Menu principal
     do {
         printf("===========================================\n");
         printf("SISTEMA DE ESTOQUE - TECHPARTS\n");
@@ -577,12 +597,13 @@ int main(void) {
         printf("[8] Encerrar o programa\n\n");
         printf("Digite a opcao desejada: ");
 
-        if (scanf("%d", &opcao) != 1) {
+        if (scanf("%d", &opcao) != 1) { // Captura erros de entrada
             fprintf(stderr, "Entrada invalida.\n");
             while (getchar() != '\n'); // Limpar buffer
             continue;
         }
 
+        // Seleção de opções
         switch (opcao) {
             case 1: 
                 inserir_peca(&th);
