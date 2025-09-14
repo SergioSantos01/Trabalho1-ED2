@@ -8,7 +8,7 @@
 #define MAX_DESCRICAO 60
 #define MAX_CODIGO 20
 
-// Estruura para definir uma peça
+// Estrutura para definir uma peça
 typedef struct No {
     char codigo[MAX_CODIGO];
     char descricao[MAX_DESCRICAO];
